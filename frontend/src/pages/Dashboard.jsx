@@ -24,6 +24,11 @@ const Dashboard = () => {
         fetchInvoices();
     }, []);
 
+    // Sync limit with service for auto-approval at creation
+    useEffect(() => {
+        invoiceService.setLimit(limit);
+    }, [limit]);
+
     const handleAutoApprove = async () => {
         setProcessing(true);
         await invoiceService.runAutoApproval(limit);

@@ -2,6 +2,7 @@ import { initialInvoices, validVendors } from './mockData';
 
 // Simulated database
 let invoices = [...initialInvoices];
+let currentLimit = 1000; // Default limit
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -24,6 +25,10 @@ const validateInvoice = (invoice) => {
 };
 
 export const invoiceService = {
+    setLimit: (limit) => {
+        currentLimit = limit;
+    },
+
     getInvoices: async () => {
         await delay(500);
         return [...invoices];
@@ -45,10 +50,18 @@ export const invoiceService = {
         // Auto-fill vendor name if ID is known, else use provided name (unregistered case)
         const knownVendor = validVendors.find(v => v.id === invoice.vendorId);
 
+        // Determine status based on active rules
+        const validation = validateInvoice(invoice);
+        let status = 'Needs Approval';
+
+        if (validation.isRegistered && validation.isValid && invoice.amount <= currentLimit) {
+            status = 'Approved';
+        }
+
         const newInvoice = {
             ...invoice,
             vendor: knownVendor ? knownVendor.name : (invoice.vendor || 'Unknown Vendor'),
-            status: 'Needs Approval',
+            status: status,
             date: new Date().toISOString().split('T')[0]
         };
         invoices = [newInvoice, ...invoices];
